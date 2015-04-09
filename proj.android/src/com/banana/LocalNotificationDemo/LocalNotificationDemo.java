@@ -26,12 +26,16 @@ package com.banana.LocalNotificationDemo;
 import org.cocos2dx.lib.Cocos2dxActivity;
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 public class LocalNotificationDemo extends Cocos2dxActivity{
 	
+	public static LocalNotificationDemo s_instance;
+	
     protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);	
+		s_instance = this;
 	}
 
     public Cocos2dxGLSurfaceView onCreateView() {
@@ -40,6 +44,22 @@ public class LocalNotificationDemo extends Cocos2dxActivity{
     	glSurfaceView.setEGLConfigChooser(5, 6, 5, 0, 16, 8);
     	
     	return glSurfaceView;
+    }
+    
+    public static boolean AddLocalNotification(final String strTitle, final String strBody, final int nSecond) {
+    	s_instance.runOnUiThread(new Runnable() {
+			public void run() {
+
+				Intent intent = new Intent(s_instance, MyIntentService.class);
+				intent.putExtra(MyReceiver.TYPE_KEY, MyReceiver.TYPE_NOTIFY);
+				intent.putExtra(MyReceiver.TITLE_KEY, strTitle);
+				intent.putExtra(MyReceiver.BODY_KEY, strBody);
+				
+				s_instance.startService(intent);  
+			}
+		});
+    	
+    	return true;
     }
 
     static {

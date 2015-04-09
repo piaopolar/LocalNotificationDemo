@@ -1,6 +1,40 @@
 #include "HelloWorldScene.h"
 
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+#include "platform/android/jni/JniHelper.h"
+#include <jni.h>
+#include <android/log.h>
+const char* MainActivityClassName = "com/banana/LocalNotificationDemo/LocalNotificationDemo";
+#endif
+
+
 USING_NS_CC;
+
+namespace
+{
+bool AddLocalNotification(const char *pszTitle, const char *pszContent, int nSecond)
+{
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+    cocos2d::JniMethodInfo t;
+    if (cocos2d::JniHelper::getStaticMethodInfo(t,
+        MainActivityClassName,
+        "AddLocalNotification",
+        "(Ljava/lang/String;Ljava/lang/String;I)Z"))
+    {
+        jstring title = t.env->NewStringUTF(pszTitle ? pszTitle : "");
+        jstring content = t.env->NewStringUTF(pszContent ? pszContent : "");
+        bool bRet = t.env->CallStaticBooleanMethod(t.classID, t.methodID, title, content, nSecond);
+        t.env->DeleteLocalRef(content);
+        t.env->DeleteLocalRef(title);
+        t.env->DeleteLocalRef(t.classID);
+        return bRet;
+    }
+
+    return false;
+#endif
+    return true;
+}   
+}
 
 CCScene* HelloWorld::scene()
 {
@@ -26,6 +60,8 @@ bool HelloWorld::init()
     {
         return false;
     }
+
+	this->setTouchEnabled(true);
     
     CCSize visibleSize = CCDirector::sharedDirector()->getVisibleSize();
     CCPoint origin = CCDirector::sharedDirector()->getVisibleOrigin();
@@ -76,6 +112,10 @@ bool HelloWorld::init()
     return true;
 }
 
+void HelloWorld::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent)
+{
+	AddLocalNotification("This is Title", "This is Text", 10);
+}
 
 void HelloWorld::menuCloseCallback(CCObject* pSender)
 {
